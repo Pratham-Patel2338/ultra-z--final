@@ -22,6 +22,8 @@ from app.events.system_handlers import (
     log_application_stopped,
 )
 
+from app.runtime.dummy_runtime import DummyRuntime
+from app.runtime.manager import runtime_manager
 
 
 
@@ -39,6 +41,11 @@ async def lifespan(app: FastAPI):
     await event_bus.publish(
         ApplicationStartedEvent()
     )
+    runtime_manager.register(
+        DummyRuntime()
+    )
+
+    await runtime_manager.start_all()
     # Future startup sequence
     #
     # Database
@@ -51,6 +58,7 @@ async def lifespan(app: FastAPI):
     await event_bus.publish(
         ApplicationStoppedEvent()
     )
+    await runtime_manager.stop_all()
     await database_manager.shutdown()
     logger.info("=" * 60)
     logger.info("Stopping ULTRA-Z")
