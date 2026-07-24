@@ -1,0 +1,62 @@
+# =====================================
+# Python
+# =====================================
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# =====================================
+# Virtual Environment
+# =====================================
+
+**/.venv/
+
+# =====================================
+# Environment Variables
+# =====================================
+
+**/.env
+
+# =====================================
+# Python Cache
+# =====================================
+
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# =====================================
+# Storage (Generated Files)
+# =====================================
+
+backend/storage/database/
+backend/storage/logs/
+backend/storage/cache/
+backend/storage/temp/
+
+# Optional (ignore generated runtime data)
+backend/storage/audio/
+backend/storage/uploads/
+
+# Keep these if you plan to commit AI models later.
+# If not, uncomment them.
+#
+# backend/storage/models/
+# backend/storage/embeddings/
+# backend/storage/memory/
+
+# =====================================
+# IDE
+# =====================================
+
+.vscode/
+.idea/
+
+# =====================================
+# Operating System
+# =====================================
+
+.DS_Store
+Thumbs.db
