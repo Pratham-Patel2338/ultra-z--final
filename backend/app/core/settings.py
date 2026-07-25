@@ -18,6 +18,18 @@ class Settings(BaseSettings):
     port: int = 8000
 
     api_prefix: str = "/api/v1"
+    
+    
+    
+
+
+    ollama_host: str = "http://localhost:11434"
+
+    ollama_timeout: int = 300
+
+    default_chat_model: str = "qwen3:8b"
+
+    default_embedding_model: str = "nomic-embed-text:latest"
 
     # -------------------------
     # Database
@@ -37,6 +49,5 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return a cached Settings instance."""
     return Settings()
-
 
 settings = get_settings()
