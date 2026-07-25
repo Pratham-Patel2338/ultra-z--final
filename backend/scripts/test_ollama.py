@@ -1,22 +1,57 @@
 import asyncio
 
-from app.services.llm.chat import chat_service
+from app.assistant.manager import conversation_manager
 
 
 async def main():
 
-    response = await chat_service.generate(
-        prompt="Hello! Introduce yourself in one sentence."
+    conversation1 = conversation_manager.create(
+        system_prompt="You are ULTRA-Z."
     )
+
+    conversation2 = conversation_manager.create(
+        system_prompt="You are ULTRA-Z."
+    )
+
+    chat1 = conversation_manager.get(conversation1)
+    chat2 = conversation_manager.get(conversation2)
+
+    print("=" * 60)
+    print("Conversation IDs")
+    print("=" * 60)
+
+    print(conversation1)
+    print(conversation2)
+
+    print()
+
+    await chat1.ask("My name is Pratham.")
+    await chat2.ask("My name is Rahul.")
+
+    response = await chat1.ask("What is my name?")
+    print("Conversation 1:", response.text)
+
+    response = await chat2.ask("What is my name?")
+    print("Conversation 2:", response.text)
 
     print()
     print("=" * 60)
-    print("ULTRA-Z FIRST RESPONSE")
+    print("Manager Statistics")
     print("=" * 60)
-    print(response.text)
-    print("=" * 60)
-    print()
-    print("Model:", response.model)
+
+    print("Active Conversations:", conversation_manager.count())
+    print("Conversation IDs:", conversation_manager.list_ids())
 
 
 asyncio.run(main())
+
+from app.assistant.exceptions import ConversationNotFoundError
+
+try:
+    conversation_manager.get("invalid-id")
+except ConversationNotFoundError as e:
+    print()
+    print("=" * 60)
+    print("Exception Test")
+    print("=" * 60)
+    print(e)

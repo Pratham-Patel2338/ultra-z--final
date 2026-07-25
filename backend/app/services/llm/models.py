@@ -74,10 +74,7 @@ class ModelManager:
                 f"Chat model '{settings.default_chat_model}' is not installed."
             )
 
-        logger.info(
-            "Using chat model: %s",
-            settings.default_chat_model,
-        )
+        
 
         return settings.default_chat_model
 

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 @dataclass(slots=True)
 class ChatMessage:
     """
-    A single chat message.
+    Represents one message in a conversation.
     """
 
     role: str
@@ -18,9 +18,20 @@ class ChatMessage:
 
 
 @dataclass(slots=True)
+class ChatChunk:
+    """
+    One streamed chunk from the LLM.
+    """
+
+    text: str
+
+    done: bool = False
+
+
+@dataclass(slots=True)
 class ChatResponse:
     """
-    Response returned by the chat service.
+    Final response returned by ChatService.generate().
     """
 
     text: str

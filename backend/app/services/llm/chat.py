@@ -4,6 +4,8 @@ LLM chat service.
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
+
 from ollama import ResponseError
 
 from app.core.logger import logger
@@ -13,7 +15,11 @@ from app.services.llm.exceptions import (
     ModelNotAvailableError,
 )
 from app.services.llm.models import model_manager
-from app.services.llm.types import ChatResponse
+from app.services.llm.types import (
+    ChatChunk,
+    ChatMessage,
+    ChatResponse,
+)
 
 
 class ChatService:
@@ -21,13 +27,67 @@ class ChatService:
     Handles conversations with the language model.
     """
 
+    async def stream(
+        self,
+        messages: list[ChatMessage],
+        model: str,
+    ) -> AsyncGenerator[ChatChunk, None]:
+        """
+        Stream a response from the LLM.
+        """
+
+        
+
+        logger.info("Streaming response...")
+
+        ollama_messages = [
+            {
+                "role": message.role,
+                "content": message.content,
+            }
+            for message in messages
+        ]
+
+        try:
+
+            stream = await llm_client.client.chat(
+                model=model,
+                messages=ollama_messages,
+                stream=True,
+            )
+
+            async for part in stream:
+
+                text = part.message.content or ""
+
+                if text:
+
+                    yield ChatChunk(
+                        text=text,
+                        done=False,
+                    )
+
+            yield ChatChunk(
+                text="",
+                done=True,
+            )
+
+            logger.info("Response received.")
+
+        except ResponseError as exc:
+
+            raise ModelNotAvailableError(str(exc)) from exc
+
+        except Exception as exc:
+
+            raise LLMConnectionError(str(exc)) from exc
+
     async def generate(
         self,
-        prompt: str,
-        system_prompt: str | None = None,
+        messages: list[ChatMessage],
     ) -> ChatResponse:
         """
-        Generate a response from the configured language model.
+        Generate the complete response.
         """
 
         logger.info("=" * 60)
@@ -37,58 +97,21 @@ class ChatService:
 
         logger.info("Using model: %s", model)
 
-        messages: list[dict[str, str]] = []
+        complete_text = ""
 
-        logger.info("Building messages...")
-
-        if system_prompt:
-            messages.append(
-                {
-                    "role": "system",
-                    "content": system_prompt,
-                }
-            )
-
-        messages.append(
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        )
-
-        logger.info("Messages built successfully.")
-        logger.info("Sending request to Ollama...")
-
-        try:
-            response = await llm_client.client.chat(
-                model=model,
-                messages=messages,
-            )
-
-            logger.info("Received response from Ollama.")
-
-        except ResponseError as exc:
-            logger.exception("Ollama returned an error.")
-            raise ModelNotAvailableError(str(exc)) from exc
-
-        except Exception as exc:
-            logger.exception("Failed while communicating with Ollama.")
-            raise LLMConnectionError(str(exc)) from exc
-
-        logger.info("Creating ChatResponse object...")
-
-        chat_response = ChatResponse(
-            text=response.message.content,
+        async for chunk in self.stream(
+            messages=messages,
             model=model,
-            prompt_tokens=getattr(response, "prompt_eval_count", None),
-            completion_tokens=getattr(response, "eval_count", None),
-            total_tokens=None,
-        )
+        ):
+            complete_text += chunk.text
 
-        logger.info("Chat generation completed successfully.")
+        logger.info("Chat generation completed.")
         logger.info("=" * 60)
 
-        return chat_response
+        return ChatResponse(
+            text=complete_text,
+            model=model,
+        )
 
 
 chat_service = ChatService()
